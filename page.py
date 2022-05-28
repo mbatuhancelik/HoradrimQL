@@ -1,4 +1,4 @@
-from attr import validate
+from utils import padding
 from record import Record
 
 class Page:
@@ -8,12 +8,13 @@ class Page:
     '''
     def __init__(self,tableName,type, fieldTypes):
         #TODO allocatte number of records in a page dynamically
-        self.records = {}
+        self.records = {int: Record}
         self.type = type
         self.tableName = tableName
         self.numFields = len(fieldTypes)
         self.fieldTypes = fieldTypes
         self.filled = [False] * 1024
+        self.recordHeader = {"table": self.tableName}
     
     def availableId(self):
         if(len(self.records) == 1024):
@@ -37,14 +38,14 @@ class Page:
 
         id = self.availableId()
 
-        self.records[id] = Record(self.type ,{"table": self.tableName},data)
+        self.records[id] = Record(self.type ,self.recordHeader,data)
 
         self.filled[id] = True
 
     def update(self, id, data):
         self.validateData(data)
 
-        self.records[id] = Record(self.type ,{"table": self.tableName},data)
+        self.records[id] = Record(self.type ,self.recordHeader,data)
 
     def delete(self, id):
         if id not in self.records.keys():
@@ -52,3 +53,54 @@ class Page:
 
         del self.records[id]
         self.filled[id] = False
+    def length(self):
+        return len(self.createHeader()) + len(self.filled) * len(self.mockRecord())
+    def getIdString(self, id):
+        id = str(id)
+        maxId = str(len(self.filled) -1)
+        while not len(id) == len(maxId):
+            id = "0" + id
+        
+        return id
+    def mockRecord(self) :
+        newStr = ""
+        newStr += padding("")
+        newStr += "@"
+        for h in self.recordHeader:
+            newStr += padding(h + "="+ "") + "|"
+        newStr = newStr[:-1] + "@"
+        for d in self.fieldTypes:
+            newStr += padding("") + "|"
+        newStr = newStr[:-1]
+        return newStr
+    def createHeader(self):
+        newStr = ""
+        
+        newStr += self.type + "|"
+        newStr += self.tableName + "|"
+        newStr += str(self.numFields) + "|"
+        for type in self.fieldTypes:
+            newStr += str(type) + "#"
+
+        newStr = newStr[:-1] + "|"
+        x = None 
+        for i in self.filled:
+            if i:  
+                x =  "1" 
+            else: 
+                x = "0"
+            newStr += x 
+
+        newStr += "\n"
+        self.header = newStr
+        return newStr
+    def stringify(self):
+        newStr = self.createHeader()
+
+        for i in range(len(self.filled)):
+            if i in self.records.keys():
+                newStr += self.getIdString(i) + "#" + self.records[i].stringify() + "\n"
+            else:
+                newStr += self.getIdString(i) + "#" + self.mockRecord() + "\n"
+        
+        return newStr
