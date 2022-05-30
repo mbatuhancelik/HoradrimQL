@@ -1,40 +1,53 @@
+import os.path
 from page import Page
 
-maxPages = 10
 
+
+maxPages = 10
+headerLen = 1000
 class PageMeta:
-    def __init__(self, page: Page):
-        self.table = page.tableName
-        self.type = page.type
-        self.len = page.length()
-        try:
-            page.availableId
-            self.full = False
-        except:
-            self.Full = True
+    def __init__(self, table, type, len, full):
+        self.table = table
+        self.type = type
+        self.len = len
+        self.full = full
+        
 class File:
     def __init__(self, filename):
-        fileExists = False
         self.fileName = filename
+       
+        self.exists = False
         self.pages = {} 
         self.pageIds = []
-        try:
-            f = open(self.fileName, "x")
-        except:
-            return
+
+        if(os.path.exists(filename)):
+            self.exists = True
+            self.loadFromFile()
+
+    def loadFromFile(self):
+        f = open(self.fileName, "r")
+        header = f.readline()
+        f.close()
+
+        pages = header.split("@")
+        for id in range(len(pages)):
+            page = pages[id]
+            metadata = page.split("|")
+            id = int(metadata[0])
+            self.pages[id] = PageMeta(metadata[1], metadata[2], int(metadata[3]), bool(int(metadata[4])))
+            self.pageIds.append(id)
         
-        self.loadFromFile()
-
-    def loadFromFile():
-        pass
-
     def availableId(self):
         if(len(self.pages.keys()) == maxPages ):
             raise Exception("File is full")
         
-        for i in range(maxPages ):
-            if( i not in self.pages.keys()):
-                return i
+        max = len(self.pages)
+
+        for i in self.pageIds:
+            if i > max:
+                max = i + 1
+
+        return max 
     def getIds(self):
         ids = []
         for i in range(maxPages):
@@ -46,32 +59,36 @@ class File:
     creates header, stringifies pages and writes them down
     """
     def initializeFile(self):
-        
         f = open(self.fileName, "w")
-
-        pageStrings = {}
-        for id in self.pages.keys():
-            pageStrings[id] = self.pages[id].stringify()
-
-        self.header = ""
-
-        f.write(self.header)
-        for pageId in self.pages.keys():
-            f.write(pageStrings[pageId])
+        self.exists = True
+        f.close()
 
     def addPage(self, Page):
-        self.pages[self.availableId()] = PageMeta(Page)
+        if len(self.pages.keys()) >= maxPages:
+            raise Exception(f"too many pages on file:{self.fileName}")
+        id = self.availableId()
+        str = Page.stringify()
+        self.currentPage = Page
+        self.pages[id] = PageMeta(Page.tableName, Page.type, len(str) , Page.isFull())
+        self.pageIds.append(id)
+        
         self.updateHeader()
-
+        
+        
         f = open(self.fileName, "a")
-        f.write(Page.stringify())
+        f.write(str)
+        f.close()
+        
+
         f.close()
 
 
     def updateHeader (self):
+
         self.header = ""
-        for pageId in range(len(self.pages.keys())):
+        for pageId in self.pageIds:
             page = self.pages[pageId]
+            self.header += str(pageId) + "|"
             self.header += page.table + "|"
             self.header += page.type + "|"
             self.header += str(page.len)
@@ -83,9 +100,12 @@ class File:
 
         self.header = self.header[:-1]
 
-        for i in range(1000 - len(self.header)):
+        for i in range(headerLen - len(self.header)):
             self.header += " "
         self.header += "\n"
+        
+        if not self.exists:
+            self.initializeFile()
         f = open(self.fileName, "r+")
         f.seek(0)
         f.write(self.header)
@@ -94,12 +114,25 @@ class File:
     def writePage(self):
         pass
 
+    def loadPage(self, pageId):
+        f = open(self.fileName, "r")
+        chars = headerLen + 1
+        ## this should take relative position of the page in the ids list
+        for i in range(pageId):
+            chars += self.pages[i].len
+
+        f.seek(chars)
+        s = f.read(self.pages[pageId].len)
+        f.close()
+
+        p = Page("","","","")
+        p.loadFromString(s)
 
 f1 = File("halo.txt")
 p = Page("table1", "record" , [int, int, str])
 f1.addPage(p)
 f1.addPage(p)
-f1.addPage(p)
+f1.loadPage(1)
 # f1.createPage("table2", "record" , [int, int, str, str])
 # p = f1.getPage(0)
 # p.insert([0,0,"halo"])
@@ -108,5 +141,24 @@ f1.addPage(p)
 # p.update(1, [1 , 1 , "updated"])
 # p.insert([1,0,"halo"])
 # f1.initializeFile()
-
 print("lol")
+print(len("""         |                    |                    
+1006#                    @              table=@                    |                    |                    
+1007#                    @              table=@                    |                    |                    
+1008#                    @              table=@                    |                    |                    
+1009#                    @              table=@                    |                    |                    
+1010#                    @              table=@                    |                    |                    
+1011#                    @              table=@                    |                    |                    
+1012#                    @              table=@                    |                    |                    
+1013#                    @              table=@                    |                    |                    
+1014#                    @              table=@                    |                    |                    
+1015#                    @              table=@                    |                    |                    
+1016#                    @              table=@                    |                    |                    
+1017#                    @              table=@                    |                    |                    
+1018#                    @              table=@                    |                    |                    
+1019#                    @              table=@                    |                    |                    
+1020#                    @              table=@                    |                    |                    
+1021#                    @              table=@                    |                    |                    
+1022#                    @              table=@                    |                    |                    
+1023#                    @              table=@                    |                    |                    
+"""))

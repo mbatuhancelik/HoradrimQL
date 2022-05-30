@@ -1,3 +1,4 @@
+
 from utils import padding
 from record import Record
 
@@ -52,9 +53,15 @@ class Page:
             raise Exception(f"Nonexisting record is deleted with id: {id}")
 
         del self.records[id]
-        self.filled[id] = False
+        self.filled[id] = False 
     def length(self):
-        return len(self.createHeader()) + len(self.filled) * len(self.mockRecord())
+        return len(self.createHeader()) + (len(self.filled) * len(self.getIdString(0) + "#" + self.mockRecord() + "\n")) 
+    def isFull(self):
+        try:
+            self.availableId()
+            return False
+        except:
+            return True
     def getIdString(self, id):
         id = str(id)
         maxId = str(len(self.filled) -1)
@@ -91,7 +98,7 @@ class Page:
                 x = "0"
             newStr += x 
 
-        newStr += "\n"
+        newStr += "^"
         self.header = newStr
         return newStr
     def stringify(self):
@@ -99,8 +106,11 @@ class Page:
 
         for i in range(len(self.filled)):
             if i in self.records.keys():
-                newStr += self.getIdString(i) + "#" + self.records[i].stringify() + "\n"
+                newStr += self.getIdString(i) + "#" + self.records[i].stringify() + "-"
             else:
-                newStr += self.getIdString(i) + "#" + self.mockRecord() + "\n"
+                newStr += self.getIdString(i) + "#" + self.mockRecord() + "-"
         
         return newStr
+
+    def loadFromString(self, s):
+        pass
