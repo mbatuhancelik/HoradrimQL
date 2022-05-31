@@ -113,4 +113,33 @@ class Page:
         return newStr
 
     def loadFromString(self, s):
-        pass
+        s = s.split("^")
+        if not len(s) == 2:
+            raise Exception("Broken page while reading")
+        
+        header = s[0].split("|")
+        data = s[1].split("-")
+
+        self.tableName = header[1]
+        self.recordHeader["table"] = self.tableName
+        self.type = header[0]
+
+        types = header[3].split("#")
+        self.fieldTypes = []
+        for i in range(int(header[2])):
+            if "int" in types[i]:
+                self.fieldTypes.append(int)
+            else:
+                self.fieldTypes.append(str)
+
+        self.filled = [False] * 1024
+
+        for i in range(len(header[4])):
+            if header[4][i] == '1':
+                record = data[i].split("#")
+                self.records[int(record[0])] = Record("", {}, [])
+                self.records[int(record[0])].loadFromString(record[1], self.fieldTypes)
+                self.filled[i] = True
+                
+                
+

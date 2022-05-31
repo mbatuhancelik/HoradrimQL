@@ -125,40 +125,23 @@ class File:
         s = f.read(self.pages[pageId].len)
         f.close()
 
-        p = Page("","","","")
+        p = Page("","","")
         p.loadFromString(s)
+
+        return p
 
 f1 = File("halo.txt")
 p = Page("table1", "record" , [int, int, str])
-f1.addPage(p)
-f1.addPage(p)
-f1.loadPage(1)
+p.insert([0,0,"halo"])
+p.insert([1,0,"halo"])
+# f1.addPage(p)
+# f1.addPage(p)
+p = f1.loadPage(7)
 # f1.createPage("table2", "record" , [int, int, str, str])
 # p = f1.getPage(0)
-# p.insert([0,0,"halo"])
-# p.insert([1,0,"halo"])
 # p.delete(0)
 # p.update(1, [1 , 1 , "updated"])
 # p.insert([1,0,"halo"])
 # f1.initializeFile()
-print("lol")
-print(len("""         |                    |                    
-1006#                    @              table=@                    |                    |                    
-1007#                    @              table=@                    |                    |                    
-1008#                    @              table=@                    |                    |                    
-1009#                    @              table=@                    |                    |                    
-1010#                    @              table=@                    |                    |                    
-1011#                    @              table=@                    |                    |                    
-1012#                    @              table=@                    |                    |                    
-1013#                    @              table=@                    |                    |                    
-1014#                    @              table=@                    |                    |                    
-1015#                    @              table=@                    |                    |                    
-1016#                    @              table=@                    |                    |                    
-1017#                    @              table=@                    |                    |                    
-1018#                    @              table=@                    |                    |                    
-1019#                    @              table=@                    |                    |                    
-1020#                    @              table=@                    |                    |                    
-1021#                    @              table=@                    |                    |                    
-1022#                    @              table=@                    |                    |                    
-1023#                    @              table=@                    |                    |                    
-"""))
+
+print("fml")

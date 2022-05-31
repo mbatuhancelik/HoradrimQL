@@ -17,3 +17,24 @@ class Record:
         newStr = newStr[:-1]
         self.size  = len(newStr)
         return newStr
+    
+    def loadFromString(self, s, types):
+        data = s.split("@")
+        self.type = data[0]
+
+        #TODO: Decide on headers
+        headers = data[1].split("|")
+        for h in headers:
+            header = h.split("=")
+            self.header[header[0].strip()] = header[1].strip()
+
+        data = data[2].split("|")
+        if len(data) != len(types):
+            raise Exception("Type number mismatch while loading records")
+        for i in range(len(types)):
+            data[i] = data[i].strip()
+            if types[i] == int:
+                data[i] = int(data[i])
+
+        self.data = data
+        
