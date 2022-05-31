@@ -156,9 +156,9 @@ class File:
 
 
 f1 = File("halo.txt")
-p = Page("table1", "record", [int, int, str])
-p.insert([0, 0, "halo"])
-p.insert([1, 0, "halo"])
+p = Page("table1", "record", [int, int, str, int, int, str])
+p.insert([0, 0, "halo",1, 0, "halo"])
+p.insert([1, 0, "halo",1, 0, "halo"])
 f1.addPage(p)
 p = Page("table2", "record", [int, int, str])
 p.insert([0, 0, "haloo"])

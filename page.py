@@ -14,14 +14,16 @@ class Page:
         self.tableName = tableName
         self.numFields = len(fieldTypes)
         self.fieldTypes = fieldTypes
-        self.filled = [False] * 1024
         self.recordHeader = {"table": self.tableName}
+
+        self.size = int(2.5 * 1024 / len(self.mockRecord()))
+        self.filled = [False] * self.size
     
     def availableId(self):
-        if(len(self.records) == 1024):
+        if(len(self.records) == self.size):
             raise Exception("Page is full")
         
-        for i in range(1024):
+        for i in range(self.size):
             if(not self.filled[i]):
                 return i
 
@@ -132,9 +134,10 @@ class Page:
             else:
                 self.fieldTypes.append(str)
 
-        self.filled = [False] * 1024
+        self.size = len(header[4])
+        self.filled = [False] * self.size
 
-        for i in range(len(header[4])):
+        for i in range(self.size):
             if header[4][i] == '1':
                 record = data[i].split("#")
                 self.records[int(record[0])] = Record("", {}, [])
