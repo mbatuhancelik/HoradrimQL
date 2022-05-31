@@ -157,17 +157,21 @@ class BTree:
             node = root
             ended = False
             while not ended:
+                i = 0
+                if node.isLeaf:
+                    ended = True
+                    break
                 for i in range(1, len(node.data), 2):
                     if node.data[i] > value:
                         node = node.data[i -1]
                         self.stack.append(node)
-                    elif  i + 2 >= len(node.data):
-                        node = node.data[i +1]
-                        self.stack.append(node)
-
-                    if node.isLeaf:
-                        ended = True
                         break
+                    elif  i + 2 >= len(node.data):
+                        node  = node.data[i +1]
+                        self.stack.append(node)
+                        break
+            
+
             
             self.stack.pop()
             self.__leafNodeInsert(node, value, rid)
@@ -272,13 +276,3 @@ class BTree:
 
         leaves[-1].pre = leaves[-2]
 
-
-
-
-
-t = BTree()
-for i in range(6, 23):
-    t.insert(i,i)
-d = t.root.toDict()
-
-print("lol")

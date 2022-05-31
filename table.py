@@ -73,7 +73,23 @@ class table:
         rid = p.insert(data)
         pageId = f.addPage(p)
         self.tree.insert(data[self.primaryOrder], (file.fileName, pageId, rid ))
-
+    
+    def update(self, data):
+        key = data[self.primaryOrder]
+        searchResult = self.tree.search(key)
+        if searchResult:
+            page = getPage(searchResult[0] , searchResult[1])
+            page.update(searchResult[2], data)
+            updatePage(page, searchResult[0], searchResult[1])
+    
+    def delete(self, key):
+        searchResult = self.tree.search(key)
+        if searchResult:
+            page = getPage(searchResult[0] , searchResult[1])
+            page.delete(searchResult[2])
+            self.tree.delete(key)
+            updatePage(page, searchResult[0], searchResult[1])
+        
     def __del__(self):
         d = {'tree' : self.tree.root.toDict()}
         d['tablename'] = self.tableName
@@ -86,14 +102,18 @@ class table:
         d['primaryOrder'] =self.primaryOrder
         filename = self.tableName + "_.json"
         outfile = open(filename,'w')
-        jsonStr = json.dump(d, outfile, indent=4)
+        json.dump(d, outfile, indent=4)
         outfile.close()
 
 
 t = table("table1" , 1 , ["a" , "a" , "a"], [int, int, str])
 # t.insert([1,3,"0"])
 
-for i in range(0, 300):
-    if i == 24:
-        print(i)
-    t.insert([1,i,"0"])
+# for i in range(0, 300):
+#     if i == 24:
+#         print(i)
+#     t.insert([1,i,"0"])
+
+t.update([0,26,"this is updated"])
+
+del t
