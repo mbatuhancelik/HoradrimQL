@@ -171,7 +171,7 @@ class BTree:
         if value in node.data:
             return node.rids[value]
         else:
-            raise Exception("Value not found")
+            return False
     def __indexSearch(self, node ,value):
         self.stack.append(node)
         if node.isLeaf:
@@ -182,6 +182,8 @@ class BTree:
 
         return self.__indexSearch(node.data[len(node.data)-1],value)
     def search(self, value):
+            if len(self.root.data) == 0:
+                return False
             self.stack = []
             return self.__indexSearch(self.root, value)
 
