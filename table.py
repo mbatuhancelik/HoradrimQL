@@ -16,7 +16,6 @@ class table:
             infile = open(filename,'r')
             d = json.loads(infile.read())
             infile.close()
-            self.tree.loadFromDict(d['tree'])
             self.tableName= d['tablename']
             types = d['fieldTypes']
             self.fieldTypes = []
@@ -29,6 +28,7 @@ class table:
             self.lastFile  = int(d['lastFile'])
             self.primaryOrder = int(d['primaryOrder'])
             self.primaryType = fieldTypes[primaryOrder]
+            self.tree.loadFromDict(d['tree'], self.primaryType)
         self.fieldTypes = fieldTypes
         self.fileNames = {}
         self.lastFile = 0
@@ -62,19 +62,17 @@ class table:
                 return
             elif not file.isFull():
                 p = Page(self.tableName, "record", self.fieldTypes)
-                file.addPage(p)
                 rid = p.insert(data)
+                pageId = file.addPage(p)
                 self.tree.insert(data[self.primaryOrder], (file.fileName, pageId, rid ))
-                updatePage(p, file.fileName, pageId)
                 return
         self.lastFile += 1
         self.fileNames[self.lastFile] = (self.tableName + str(self.lastFile))
         f = File(self.fileNames[self.lastFile])
         p = Page(self.tableName, "record", self.fieldTypes)
-        pageId = f.addPage(p)
         rid = p.insert(data)
+        pageId = f.addPage(p)
         self.tree.insert(data[self.primaryOrder], (file.fileName, pageId, rid ))
-        updatePage(p, file.fileName, pageId)
 
     def __del__(self):
         d = {'tree' : self.tree.root.toDict()}
@@ -95,5 +93,7 @@ class table:
 t = table("table1" , 1 , ["a" , "a" , "a"], [int, int, str])
 # t.insert([1,3,"0"])
 
-for i in range(30):
+for i in range(0, 300):
+    if i == 24:
+        print(i)
     t.insert([1,i,"0"])

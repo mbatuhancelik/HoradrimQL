@@ -54,10 +54,15 @@ class Node:
                 d[i] = self.data[i]
         return d
 
-    def fromDict(self, d):
+    def fromDict(self, d, keyType):
         self.isLeaf = d["isLeaf"]
         self.isRoot = d["isRoot"]
-        self.rids= d["rid"]
+        self.rids = {}
+        if keyType == int:
+            for i in d['rid'].keys():
+                self.rids[int(i)] = d['rid'][i]
+        else:
+            self.rids= d["rid"]
 
         del d["isLeaf"]
         del d["isRoot"]
@@ -66,7 +71,7 @@ class Node:
         for i in d.keys():
             if isinstance(d[i], dict):
                 n = Node(False, False)
-                n.fromDict(d[i])
+                n.fromDict(d[i], keyType)
                 self.data.append(n)
             else:
                 self.data.append(d[i])
@@ -257,10 +262,10 @@ class BTree:
 
         self.__leafDelete(self.stack.pop(), value)
     
-    def loadFromDict(self, d):
+    def loadFromDict(self, d, keyType):
         global leaves 
         leaves = []
-        self.root.fromDict(d)
+        self.root.fromDict(d, keyType)
         for i in range(len(leaves) -1):
             leaves[i].next = leaves[i + 1]
             leaves[i + 1].pre = leaves[i]
