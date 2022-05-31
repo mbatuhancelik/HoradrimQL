@@ -46,6 +46,9 @@ class table:
             f.addPage(p)
 
     def insert(self,data):
+
+        if self.tree.search(data[self.primaryOrder]):
+            raise Exception("Key already exists")
         for i in self.fileNames.keys():
             file = File(self.fileNames[i])
 
