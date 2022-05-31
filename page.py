@@ -45,6 +45,8 @@ class Page:
 
         self.filled[id] = True
 
+        return id
+
     def update(self, id, data):
         self.validateData(data)
 
