@@ -68,10 +68,10 @@ class table:
                 return
         self.lastFile += 1
         self.fileNames[self.lastFile] = (self.tableName + str(self.lastFile))
-        f = File(self.fileNames[self.lastFile])
+        file = File(self.fileNames[self.lastFile])
         p = Page(self.tableName, "record", self.fieldTypes)
         rid = p.insert(data)
-        pageId = f.addPage(p)
+        pageId = file.addPage(p)
         self.tree.insert(data[self.primaryOrder], (file.fileName, pageId, rid ))
     
     def update(self, data):
@@ -89,7 +89,14 @@ class table:
             page.delete(searchResult[2])
             self.tree.delete(key)
             updatePage(page, searchResult[0], searchResult[1])
-        
+    def list(self):
+        rids = self.tree.list()
+        result = []
+        for i in rids.keys():
+            rid = rids[i] 
+            p = getPage(rid[0], rid[1])
+            result.append(p.records[rid[2]].data)
+        return result
     def __del__(self):
         d = {'tree' : self.tree.root.toDict()}
         d['tablename'] = self.tableName
@@ -107,13 +114,16 @@ class table:
 
 
 t = table("table1" , 1 , ["a" , "a" , "a"], [int, int, str])
-# t.insert([1,3,"0"])
 
-# for i in range(0, 300):
-#     if i == 24:
-#         print(i)
-#     t.insert([1,i,"0"])
 
-t.update([0,26,"this is updated"])
+for i in range(0, 300):
+    if i == 24:
+        print(i)
+    t.insert([1,i,"0"])
+
+for i in range(24, 48):
+    if i == 42:
+        print(i)
+    t.delete(i)
 
 del t

@@ -3,6 +3,8 @@
 
 import json
 
+from numpy import isin
+
 
 D = 4
 leaves = []
@@ -213,19 +215,34 @@ class BTree:
                 self.__indexNodeInsert(parent.data[i + 1], value, right = False, left = node.data[0] )
                 parent.data.remove(parent.data[i-1])
                 parent.data.remove(parent.data[i-1])
-
-                for k in right.data:
-                    self.insert(k, right.rids[k])
+                if parent.isRoot and len(parent.data) == 1:
+                    self.root = parent.data[0]
+                toInsert = right.data
+                if not right.isLeaf: 
+                    toInsert = self.__listSubtree(right)
+                else:
+                    toInsert = right.rids
+                for k in toInsert.keys():
+                    self.insert(k, toInsert[k])
+                if len(parent.data) == 3:
+                    self.search(parent.data[1])
+                    self.stack = self.stack[:self.stack.index(parent)]
+                    self.__indexDelete(parent)
                 return
-        
         i = len(parent.data)
         self.__indexNodeInsert(parent.data[i - 3], value, left = False, right = node.data[2] )
         parent.data.remove(parent.data[i-1])
         parent.data.remove(parent.data[i-2])
-
-        for k in left.data:
-            self.insert(k, left.rids[k])
-        return
+        toInsert = left.rids
+        if not left.isLeaf: 
+            toInsert = self.__listSubtree(left)
+        for k in toInsert.keys():
+            self.insert(k, toInsert[k])
+        if len(parent.data) == 3:
+            self.search(parent.data[1])
+            self.stack = self.stack[:self.stack.index(parent)]
+            self.__indexDelete(parent)
+        return 
 
 
     def __leafDelete(self, node, value):
@@ -275,4 +292,34 @@ class BTree:
             leaves[i + 1].pre = leaves[i]
 
         leaves[-1].pre = leaves[-2]
+    def __listSubtree(self , node):
+        max = node
+        while not max.isLeaf:
+            max = max.data[-1]
+
+        min = node
+        while not min.isLeaf:
+            min = min.data[0]
+
+        rids = {}
+        node = min
+        while node != max.next:
+            for i in node.data:
+                rids[i] = node.rids[i]
+            node = node.next
+
+    
+        return rids
+    def list(self):
+        node = self.root
+        while not node.isLeaf:
+            node = node.data[0]
+
+        rids = {}
+        while isinstance(node, Node):
+            for i in node.data:
+                rids[i] = node.rids[i]
+            node = node.next
+    
+        return rids
 

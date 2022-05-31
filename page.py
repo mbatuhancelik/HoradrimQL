@@ -15,7 +15,7 @@ class Page:
         self.numFields = len(fieldTypes)
         self.fieldTypes = fieldTypes
         self.recordHeader = {"table": self.tableName}
-
+        self.deleted = False
         self.size = int(2.5 * 1024 / len(self.mockRecord()))
         self.filled = [False] * self.size
     
@@ -57,7 +57,8 @@ class Page:
             raise Exception(f"Nonexisting record is deleted with id: {id}")
 
         del self.records[id]
-        self.filled[id] = False 
+        self.filled[id] = False
+        self.deleted = True 
     def length(self):
         return len(self.createHeader()) + (len(self.filled) * len(self.getIdString(0) + "#" + self.mockRecord() + "\n")) 
     def isFull(self):
@@ -105,6 +106,11 @@ class Page:
         newStr += "^"
         self.header = newStr
         return newStr
+    def isEmpty(self):
+        for b in self.filled:
+            if b:
+                return False
+        return True
     def stringify(self):
         newStr = self.createHeader()
 

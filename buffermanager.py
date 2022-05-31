@@ -23,4 +23,7 @@ def updatePage(p, filename, pageId):
     if not f.exists:
         raise Exception("File not found")
 
+    if p.isEmpty() and p.deleted:
+        f.deletePage(pageId)
+        return
     f.updatePage(pageId, p)
