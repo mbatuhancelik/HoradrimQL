@@ -9,7 +9,7 @@ class Page:
     '''
     def __init__(self,tableName,type, fieldTypes):
         #TODO allocatte number of records in a page dynamically
-        self.records = {int: Record}
+        self.records = {}
         self.type = type
         self.tableName = tableName
         self.numFields = len(fieldTypes)

@@ -114,6 +114,7 @@ class File:
 
     def updatePage(self, pageId, Page: Page):
         self.pages[pageId] = PageMeta(Page.tableName, Page.type,Page.length(), Page.isFull())
+        self.updateHeader()
         f = open(self.fileName, "r+")
         chars = headerLen + 1
         ## this should take relative position of the page in the ids list
@@ -146,6 +147,8 @@ class File:
         p.loadFromString(s)
 
         return p
+    def isFull(self):
+        return len(self.pages.keys()) == maxPages
     def deletePage(self, pageId):
         ##TODO: keep the pages above the deleted page
         if pageId not in self.pageIds:
