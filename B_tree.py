@@ -1,8 +1,11 @@
 
 
 
-D = 4
+import json
 
+
+D = 4
+leaves = []
 class Node:
     def __init__(self, isRoot, isLeaf):
         self.data = []
@@ -42,11 +45,47 @@ class Node:
         self.data.append(value)
         self.data.append(right)
 
+    def toDict(self):
+        d = {"isRoot": self.isRoot, "isLeaf": self.isLeaf, "rid" : self.rids}
+        for i in range(len(self.data)):
+            if isinstance(self.data[i], Node):
+                d[i] = self.data[i].toDict()
+            else:
+                d[i] = self.data[i]
+        return d
+
+    def fromDict(self, d):
+        self.isLeaf = d["isLeaf"]
+        self.isRoot = d["isRoot"]
+        self.rids= d["rid"]
+
+        del d["isLeaf"]
+        del d["isRoot"]
+        del d["rid"]
+        
+        for i in d.keys():
+            if isinstance(d[i], dict):
+                n = Node(False, False)
+                n.fromDict(d[i])
+                self.data.append(n)
+            else:
+                self.data.append(d[i])
+        global leaves
+        if self.isLeaf:
+            leaves.append(self)
+
+            
+    def toJSON(self):
+        return self.toDict()
+
 
 class BTree:
     def __init__(self):
         self.root = Node(True, False)
 
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, 
+            sort_keys=True, indent=4)
     def __indexNodeInsert(self,node,value,right,left):
         # right left may be null
         node.insert(value,right, left)
@@ -215,6 +254,17 @@ class BTree:
         rid = self.search(value)
 
         self.__leafDelete(self.stack.pop(), value)
+    
+    def loadFromDict(self, d):
+        global leaves 
+        leaves = []
+        self.root.fromDict(d)
+        for i in range(len(leaves) -1):
+            leaves[i].next = leaves[i + 1]
+            leaves[i + 1].pre = leaves[i]
+
+        leaves[-1].pre = leaves[-2]
+
 
 
 
@@ -222,7 +272,6 @@ class BTree:
 t = BTree()
 for i in range(6, 23):
     t.insert(i,i)
-t.delete(21)
-t.delete(22)
+d = t.root.toDict()
 
 print("lol")

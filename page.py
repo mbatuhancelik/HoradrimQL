@@ -135,7 +135,7 @@ class Page:
                 self.fieldTypes.append(int)
             else:
                 self.fieldTypes.append(str)
-
+        self.numFields = len(self.fieldTypes)
         self.size = len(header[4])
         self.filled = [False] * self.size
 

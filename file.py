@@ -84,8 +84,6 @@ class File:
         f.write(str)
         f.close()
 
-        f.close()
-
     def updateHeader(self):
 
         self.header = ""
@@ -114,14 +112,27 @@ class File:
         f.write(self.header)
         f.close()
 
-    def writePage(self):
-        pass
+    def updatePage(self, pageId, Page: Page):
+        self.pages[pageId] = PageMeta(Page.tableName, Page.type,Page.length(), Page.isFull())
+        f = open(self.fileName, "r+")
+        chars = headerLen + 1
+        ## this should take relative position of the page in the ids list
+        for i in self.pageIds:
+            if i == pageId:
+                break
+            chars += self.pages[i].len
+
+        f.seek(chars)
+        f.write(Page.stringify())
+        f.close()
     
     def loadPageString(self, pageId):
         f = open(self.fileName, "r")
         chars = headerLen + 1
         ## this should take relative position of the page in the ids list
-        for i in range(pageId):
+        for i in self.pageIds:
+            if i == pageId:
+                break
             chars += self.pages[i].len
 
         f.seek(chars)
@@ -136,6 +147,7 @@ class File:
 
         return p
     def deletePage(self, pageId):
+        ##TODO: keep the pages above the deleted page
         if pageId not in self.pageIds:
             raise Exception("Deleting nonexisting page")
         pageStrings = {}
@@ -155,26 +167,26 @@ class File:
         f.close()
 
 
-f1 = File("halo.txt")
-p = Page("table1", "record", [int, int, str, int, int, str])
-p.insert([0, 0, "halo",1, 0, "halo"])
-p.insert([1, 0, "halo",1, 0, "halo"])
-f1.addPage(p)
-p = Page("table2", "record", [int, int, str])
-p.insert([0, 0, "haloo"])
-p.insert([1, 0, "haloo"])
-f1.addPage(p)
-p = Page("table3", "record", [int, int, str])
-p.insert([0, 0, "halooo"])
-p.insert([1, 0, "halooo"])
-f1.addPage(p)
+# f1 = File("halo.txt")
+# p = Page("table1", "record", [int, int, str, int, int, str])
+# p.insert([0, 0, "halo",1, 0, "halo"])
+# p.insert([1, 0, "halo",1, 0, "halo"])
 # f1.addPage(p)
-f1.deletePage(1)
-# f1.createPage("table2", "record" , [int, int, str, str])
-# p = f1.getPage(0)
-# p.delete(0)
-# p.update(1, [1 , 1 , "updated"])
-# p.insert([1,0,"halo"])
-# f1.initializeFile()
+# p = Page("table2", "record", [int, int, str])
+# p.insert([0, 0, "haloo"])
+# p.insert([1, 0, "haloo"])
+# f1.addPage(p)
+# p = Page("table3", "record", [int, int, str])
+# p.insert([0, 0, "halooo"])
+# p.insert([1, 0, "halooo"])
+# f1.addPage(p)
+# # f1.addPage(p)
+# f1.deletePage(1)
+# # f1.createPage("table2", "record" , [int, int, str, str])
+# # p = f1.getPage(0)
+# # p.delete(0)
+# # p.update(1, [1 , 1 , "updated"])
+# # p.insert([1,0,"halo"])
+# # f1.initializeFile()
 
-print("fml")
+# print("fml")
