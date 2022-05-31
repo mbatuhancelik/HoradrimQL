@@ -84,6 +84,8 @@ class File:
         f.write(str)
         f.close()
 
+        return id
+
     def updateHeader(self):
 
         self.header = ""

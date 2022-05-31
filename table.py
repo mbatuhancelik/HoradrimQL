@@ -1,10 +1,5 @@
 from cmath import inf
-from fileinput import filename
 import json
-import pickle
-from types import SimpleNamespace
-
-from pyrsistent import field
 from B_tree import BTree
 from file import File
 from page import Page
@@ -70,13 +65,16 @@ class table:
                 file.addPage(p)
                 rid = p.insert(data)
                 self.tree.insert(data[self.primaryOrder], (file.fileName, pageId, rid ))
+                updatePage(p, file.fileName, pageId)
+                return
         self.lastFile += 1
         self.fileNames[self.lastFile] = (self.tableName + str(self.lastFile))
         f = File(self.fileNames[self.lastFile])
         p = Page(self.tableName, "record", self.fieldTypes)
-        f.addPage(p)
-        rid = p.insert(data, {"table":self.tableName})
+        pageId = f.addPage(p)
+        rid = p.insert(data)
         self.tree.insert(data[self.primaryOrder], (file.fileName, pageId, rid ))
+        updatePage(p, file.fileName, pageId)
 
     def __del__(self):
         d = {'tree' : self.tree.root.toDict()}
@@ -98,4 +96,4 @@ t = table("table1" , 1 , ["a" , "a" , "a"], [int, int, str])
 # t.insert([1,3,"0"])
 
 for i in range(30):
-    t.insert([1,4,"0"])
+    t.insert([1,i,"0"])
