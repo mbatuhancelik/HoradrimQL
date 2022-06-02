@@ -1,4 +1,5 @@
 import os.path
+import os
 from page import Page
 
 maxPages = 10
@@ -155,6 +156,10 @@ class File:
         ##TODO: keep the pages above the deleted page
         if pageId not in self.pageIds:
             raise Exception("Deleting nonexisting page")
+        if len(self.pageIds) == 1:
+            os.remove(self.fileName)
+            return
+        
         pageStrings = {}
 
         for i in self.pageIds:

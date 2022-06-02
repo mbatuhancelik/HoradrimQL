@@ -347,3 +347,40 @@ class BTree:
     
         return rids
 
+    def filter(self,min = None, max = None):
+        if min and max : 
+            raise Exception("Make your mind about filter")
+        result = {}
+
+        if min:
+            self.search(min)
+            leaf = self.stack.pop()
+            for i in leaf.rids.keys(): 
+                if i > min:
+                    result[i] = leaf.rids[i]
+            
+            while leaf:
+                result.update(leaf.rids)
+                leaf = leaf.next
+
+            
+        elif max:
+            self.search(max)
+            leaf = self.stack.pop()
+            for i in leaf.rids.keys(): 
+                if i < max:
+                    result[i] = leaf.rids[i]
+            
+            while leaf:
+                result.update(leaf.rids)
+                leaf = leaf.pre
+        else:
+            raise Exception("No condition given")
+        
+        return result
+
+
+        
+
+
+
