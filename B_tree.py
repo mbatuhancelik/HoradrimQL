@@ -2,6 +2,7 @@
 
 
 import json
+from statistics import median_grouped
 
 from numpy import isin
 
@@ -212,57 +213,56 @@ class BTree:
         value = node.data[1]
         for i in range(1, len(parent.data), 2):
             if parent.data[i] > value:
-                self.stack.append(parent)
-                rightestLeaf = right
-                while not rightestLeaf.isLeaf:
-                    rightestLeaf = rightestLeaf.data[-1]
-                leftestLeaf = right
-                while not leftestLeaf.isLeaf:
-                    leftestLeaf = leftestLeaf.data[0]
                 
-                leftestLeaf.pre.next = rightestLeaf.next
-                rightestLeaf.next.pre = leftestLeaf.pre
-                self.__indexNodeInsert(parent.data[i + 1], value, right = False, left = node.data[0] )
-                parent.data.remove(parent.data[i-1])
-                parent.data.remove(parent.data[i-1])
-                if parent.isRoot and len(parent.data) == 1:
-                    self.root = parent.data[0]
-                toInsert = right.data
-                if not right.isLeaf: 
-                    toInsert = self.__listSubtree(right)
+                mergedNode = node.data + [parent.data[i]] + parent.data[i+1].data
+
+                if len(mergedNode) == 2 * D + 1:
+                    n = Node(False, False)
+                    n.data = mergedNode
+                    if parent.isRoot and len(parent.data) == 3:
+                        n.isRoot = True
+                        self.root = n
+                    else:
+                        parent.data.remove(parent.data[i-1])
+                        parent.data.remove(parent.data[i-1])
+                        parent.data[i-1] = n
+                        self.__indexDelete(parent)
                 else:
-                    toInsert = right.rids
-                for k in toInsert.keys():
-                    self.insert(k, toInsert[k])
-                if len(parent.data) == 3:
-                    self.search(parent.data[1])
-                    self.stack = self.stack[:self.stack.index(parent)]
-                    self.__indexDelete(parent)
+                    firstNode = mergedNode[:3*2 +1 + 1]
+                    secondNode = mergedNode[3*2 +1 + 1:]
+                    n1 = Node(False , False)
+                    n1.data = firstNode
+                    n2 = Node(False, False)
+                    n2.data = secondNode
+
+                    parent.data[i] = n2.data[1]
+                    parent.data[i-1] = n1
+                    parent.data[i+1] = n2
                 return
-        i = len(parent.data)
-        self.stack.append(parent)
-        rightestLeaf = left
-        while not rightestLeaf.isLeaf:
-            rightestLeaf = rightestLeaf.data[-1]
-        leftestLeaf = left
-        while not leftestLeaf.isLeaf:
-            leftestLeaf = leftestLeaf.data[0]
-        
-        leftestLeaf.pre.next = rightestLeaf.next
-        rightestLeaf.next.pre = leftestLeaf.pre
-        self.__indexNodeInsert(parent.data[i - 3], value, left = False, right = node.data[2] )
-        parent.data.remove(parent.data[i-1])
-        parent.data.remove(parent.data[i-2])
-        toInsert = left.rids
-        if not left.isLeaf: 
-            toInsert = self.__listSubtree(left)
-        for k in toInsert.keys():
-            self.insert(k, toInsert[k])
-        if len(parent.data) == 3:
-            self.search(parent.data[1])
-            self.stack = self.stack[:self.stack.index(parent)]
-            self.__indexDelete(parent)
-        return 
+
+        mergedNode =parent.data[-2].data +  [parent.data[-1]]+ node.data 
+        if len(mergedNode) == 2 * D + 1:
+            n = Node(False, False)
+            n.data = mergedNode
+            if parent.isRoot and len(parent.data) == 3:
+                n.isRoot = True
+                self.root = n
+            else:
+                parent.data.remove(parent.data[-1])
+                parent.data.remove(parent.data[-1])
+                parent.data[-1] = n
+                self.__indexDelete(parent)
+        else:
+            firstNode = mergedNode[:3*2 +1 + 1]
+            secondNode = mergedNode[3*2 +1 + 1:]
+            n1 = Node(False , False)
+            n1.data = firstNode
+            n2 = Node(False, False)
+            n2.data = secondNode
+
+            parent.data[-2] = n2.data[1]
+            parent.data[-3] = n1
+            parent.data[-1] = n2
 
 
     def __leafDelete(self, node, value):
@@ -346,15 +346,4 @@ class BTree:
             node = node.next
     
         return rids
-
-t = BTree()
-for i in range(0, 300):
-    if i == 24:
-        print(i)
-    t.insert(i,[1,i,"0"])
-
-for i in range(24, 48):
-    if i == 26:
-        print(i)
-    t.delete(i)
 
