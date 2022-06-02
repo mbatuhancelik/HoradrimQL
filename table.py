@@ -1,4 +1,3 @@
-from cmath import inf
 import json
 from B_tree import BTree
 from file import File
@@ -122,7 +121,7 @@ for i in range(0, 300):
     t.insert([1,i,"0"])
 
 for i in range(24, 48):
-    if i == 42:
+    if i == 26:
         print(i)
     t.delete(i)
 

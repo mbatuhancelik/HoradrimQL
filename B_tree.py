@@ -69,7 +69,7 @@ class Node:
         del d["isLeaf"]
         del d["isRoot"]
         del d["rid"]
-        
+        ##TODO: sort keys
         for i in d.keys():
             if isinstance(d[i], dict):
                 n = Node(False, False)
@@ -212,6 +212,16 @@ class BTree:
         value = node.data[1]
         for i in range(1, len(parent.data), 2):
             if parent.data[i] > value:
+                self.stack.append(parent)
+                rightestLeaf = right
+                while not rightestLeaf.isLeaf:
+                    rightestLeaf = rightestLeaf.data[-1]
+                leftestLeaf = right
+                while not leftestLeaf.isLeaf:
+                    leftestLeaf = leftestLeaf.data[0]
+                
+                leftestLeaf.pre.next = rightestLeaf.next
+                rightestLeaf.next.pre = leftestLeaf.pre
                 self.__indexNodeInsert(parent.data[i + 1], value, right = False, left = node.data[0] )
                 parent.data.remove(parent.data[i-1])
                 parent.data.remove(parent.data[i-1])
@@ -230,6 +240,16 @@ class BTree:
                     self.__indexDelete(parent)
                 return
         i = len(parent.data)
+        self.stack.append(parent)
+        rightestLeaf = left
+        while not rightestLeaf.isLeaf:
+            rightestLeaf = rightestLeaf.data[-1]
+        leftestLeaf = left
+        while not leftestLeaf.isLeaf:
+            leftestLeaf = leftestLeaf.data[0]
+        
+        leftestLeaf.pre.next = rightestLeaf.next
+        rightestLeaf.next.pre = leftestLeaf.pre
         self.__indexNodeInsert(parent.data[i - 3], value, left = False, right = node.data[2] )
         parent.data.remove(parent.data[i-1])
         parent.data.remove(parent.data[i-2])
@@ -257,21 +277,25 @@ class BTree:
                 if value < parent.data[i]:
                     parent.data.remove(parent.data[i-1])
                     parent.data.remove(parent.data[i-1])
+                    node.pre.next = node.next
+                    node.next.pre = node.pre
                     self.stack.append(parent)
                     self.__leafNodeInsert(node.next, node.data[0], node.rids[node.data[0]])
-                    self.search(node.data[0])
                     if len(parent.data) == 3:
+                        self.search(node.data[0])
                         self.stack.pop() #removing leaf node
                         self.stack.pop() #removing current node
                         self.__indexDelete(parent)
                     return
             i = len(parent.data)
+            node.pre.next = node.next
+            node.next.pre = node.pre
+            self.stack.append(parent)
             parent.data.remove(parent.data[i-1])
             parent.data.remove(parent.data[i-2])
-            self.stack.append(parent)
             self.__leafNodeInsert(node.pre, node.data[0], node.rids[node.data[0]])
-            self.search(node.data[0])
             if len(parent.data) == 3:
+                self.search(node.data[0])
                 self.stack.pop() #removing leaf node
                 self.stack.pop() #removing current node
                 self.__indexDelete(parent)
@@ -322,4 +346,15 @@ class BTree:
             node = node.next
     
         return rids
+
+t = BTree()
+for i in range(0, 300):
+    if i == 24:
+        print(i)
+    t.insert(i,[1,i,"0"])
+
+for i in range(24, 48):
+    if i == 26:
+        print(i)
+    t.delete(i)
 
