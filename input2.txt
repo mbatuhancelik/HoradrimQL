@@ -1,0 +1,11 @@
+create record evil Diablo PrimeEvil LordOfTerror redLightningHose
+create type angel 3 1 name str alias str affiliation str
+delete record angel Itherael
+create type potion 3 1 id int type str size str
+create record potion 4 healing greater
+create record potion 11 stamina standard
+create record potion 6 mana minor
+create record evil Belial LesserEvil LordOfLies flySwarms
+filter record potion id>5
+search record angel Tyrael
+filter record evil name>Baal

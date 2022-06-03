@@ -1,0 +1,8 @@
+create type angel 3 1 name str alias str affiliation str
+create type evil 4 1 name str type str alias str spell str
+create record angel Tyrael ArchangelOfJustice HighHeavens
+create record angel Itherael ArchangelOfFate HighHeavens
+update record angel Tyrael Tyrael AspectOfWisdom Horadrim
+list record angel
+list record evil
+list type
