@@ -14,15 +14,16 @@ class Page:
         self.tableName = tableName
         self.numFields = len(fieldTypes)
         self.fieldTypes = fieldTypes
-        self.filled = [False] * 1024
-        self.recordHeader = {"table": self.tableName}   # Record header only includes table name for now?
+        self.recordHeader = {"table": self.tableName}
+        self.deleted = False
+        self.size = int(2.5 * 1024 / len(self.mockRecord()))
+        self.filled = [False] * self.size
     
     def availableId(self):
-        """Looks for an available spot in page."""
-        if(len(self.records) == 1024):
+        if(len(self.records) == self.size):
             raise Exception("Page is full")
         
-        for i in range(1024):
+        for i in range(self.size):
             if(not self.filled[i]):
                 return i
 
@@ -46,6 +47,8 @@ class Page:
 
         self.filled[id] = True
 
+        return id
+
     def update(self, id, data):
         """ Update existing record."""
 
@@ -60,7 +63,8 @@ class Page:
             raise Exception(f"Nonexisting record is deleted with id: {id}")
 
         del self.records[id]
-        self.filled[id] = False 
+        self.filled[id] = False
+        self.deleted = True 
     def length(self):
         return len(self.createHeader()) + (len(self.filled) * len(self.getIdString(0) + "#" + self.mockRecord() + "\n")) 
 
@@ -111,6 +115,11 @@ class Page:
         newStr += "^"
         self.header = newStr
         return newStr
+    def isEmpty(self):
+        for b in self.filled:
+            if b:
+                return False
+        return True
     def stringify(self):
         newStr = self.createHeader()
 
@@ -141,10 +150,11 @@ class Page:
                 self.fieldTypes.append(int)
             else:
                 self.fieldTypes.append(str)
+        self.numFields = len(self.fieldTypes)
+        self.size = len(header[4])
+        self.filled = [False] * self.size
 
-        self.filled = [False] * 1024
-
-        for i in range(len(header[4])):
+        for i in range(self.size):
             if header[4][i] == '1':
                 record = data[i].split("#")
                 self.records[int(record[0])] = Record("", {}, [])

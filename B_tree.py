@@ -1,8 +1,14 @@
 
 
 
-D = 4
+import json
+from statistics import median_grouped
 
+from numpy import isin
+
+
+D = 4
+leaves = []
 class Node:
     def __init__(self, isRoot, isLeaf):
         self.data = []
@@ -42,11 +48,52 @@ class Node:
         self.data.append(value)
         self.data.append(right)
 
+    def toDict(self):
+        d = {"isRoot": self.isRoot, "isLeaf": self.isLeaf, "rid" : self.rids}
+        for i in range(len(self.data)):
+            if isinstance(self.data[i], Node):
+                d[i] = self.data[i].toDict()
+            else:
+                d[i] = self.data[i]
+        return d
+
+    def fromDict(self, d, keyType):
+        self.isLeaf = d["isLeaf"]
+        self.isRoot = d["isRoot"]
+        self.rids = {}
+        if keyType == int:
+            for i in d['rid'].keys():
+                self.rids[int(i)] = d['rid'][i]
+        else:
+            self.rids= d["rid"]
+
+        del d["isLeaf"]
+        del d["isRoot"]
+        del d["rid"]
+        ##TODO: sort keys
+        for i in d.keys():
+            if isinstance(d[i], dict):
+                n = Node(False, False)
+                n.fromDict(d[i], keyType)
+                self.data.append(n)
+            else:
+                self.data.append(d[i])
+        global leaves
+        if self.isLeaf:
+            leaves.append(self)
+
+            
+    def toJSON(self):
+        return self.toDict()
+
 
 class BTree:
     def __init__(self):
         self.root = Node(True, False)
 
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, 
+            sort_keys=True, indent=4)
     def __indexNodeInsert(self,node,value,right,left):
         # right left may be null
         node.insert(value,right, left)
@@ -113,17 +160,21 @@ class BTree:
             node = root
             ended = False
             while not ended:
+                i = 0
+                if node.isLeaf:
+                    ended = True
+                    break
                 for i in range(1, len(node.data), 2):
                     if node.data[i] > value:
                         node = node.data[i -1]
                         self.stack.append(node)
-                    elif  i + 2 >= len(node.data):
-                        node = node.data[i +1]
-                        self.stack.append(node)
-
-                    if node.isLeaf:
-                        ended = True
                         break
+                    elif  i + 2 >= len(node.data):
+                        node  = node.data[i +1]
+                        self.stack.append(node)
+                        break
+            
+
             
             self.stack.pop()
             self.__leafNodeInsert(node, value, rid)
@@ -132,7 +183,7 @@ class BTree:
         if value in node.data:
             return node.rids[value]
         else:
-            raise Exception("Value not found")
+            return False
     def __indexSearch(self, node ,value):
         self.stack.append(node)
         if node.isLeaf:
@@ -143,6 +194,8 @@ class BTree:
 
         return self.__indexSearch(node.data[len(node.data)-1],value)
     def search(self, value):
+            if len(self.root.data) == 0:
+                return False
             self.stack = []
             return self.__indexSearch(self.root, value)
 
@@ -160,22 +213,56 @@ class BTree:
         value = node.data[1]
         for i in range(1, len(parent.data), 2):
             if parent.data[i] > value:
-                self.__indexNodeInsert(parent.data[i + 1], value, right = False, left = node.data[0] )
-                parent.data.remove(parent.data[i-1])
-                parent.data.remove(parent.data[i-1])
+                
+                mergedNode = node.data + [parent.data[i]] + parent.data[i+1].data
 
-                for k in right.data:
-                    self.insert(k, right.rids[k])
+                if len(mergedNode) == 2 * D + 1:
+                    n = Node(False, False)
+                    n.data = mergedNode
+                    if parent.isRoot and len(parent.data) == 3:
+                        n.isRoot = True
+                        self.root = n
+                    else:
+                        parent.data.remove(parent.data[i-1])
+                        parent.data.remove(parent.data[i-1])
+                        parent.data[i-1] = n
+                        self.__indexDelete(parent)
+                else:
+                    firstNode = mergedNode[:3*2 +1 + 1]
+                    secondNode = mergedNode[3*2 +1 + 1:]
+                    n1 = Node(False , False)
+                    n1.data = firstNode
+                    n2 = Node(False, False)
+                    n2.data = secondNode
+
+                    parent.data[i] = n2.data[1]
+                    parent.data[i-1] = n1
+                    parent.data[i+1] = n2
                 return
-        
-        i = len(parent.data)
-        self.__indexNodeInsert(parent.data[i - 3], value, left = False, right = node.data[2] )
-        parent.data.remove(parent.data[i-1])
-        parent.data.remove(parent.data[i-2])
 
-        for k in left.data:
-            self.insert(k, left.rids[k])
-        return
+        mergedNode =parent.data[-2].data +  [parent.data[-1]]+ node.data 
+        if len(mergedNode) == 2 * D + 1:
+            n = Node(False, False)
+            n.data = mergedNode
+            if parent.isRoot and len(parent.data) == 3:
+                n.isRoot = True
+                self.root = n
+            else:
+                parent.data.remove(parent.data[-1])
+                parent.data.remove(parent.data[-1])
+                parent.data[-1] = n
+                self.__indexDelete(parent)
+        else:
+            firstNode = mergedNode[:3*2 +1 + 1]
+            secondNode = mergedNode[3*2 +1 + 1:]
+            n1 = Node(False , False)
+            n1.data = firstNode
+            n2 = Node(False, False)
+            n2.data = secondNode
+
+            parent.data[-2] = n2.data[1]
+            parent.data[-3] = n1
+            parent.data[-1] = n2
 
 
     def __leafDelete(self, node, value):
@@ -190,21 +277,25 @@ class BTree:
                 if value < parent.data[i]:
                     parent.data.remove(parent.data[i-1])
                     parent.data.remove(parent.data[i-1])
+                    node.pre.next = node.next
+                    node.next.pre = node.pre
                     self.stack.append(parent)
                     self.__leafNodeInsert(node.next, node.data[0], node.rids[node.data[0]])
-                    self.search(node.data[0])
                     if len(parent.data) == 3:
+                        self.search(node.data[0])
                         self.stack.pop() #removing leaf node
                         self.stack.pop() #removing current node
                         self.__indexDelete(parent)
                     return
             i = len(parent.data)
+            node.pre.next = node.next
+            node.next.pre = node.pre
+            self.stack.append(parent)
             parent.data.remove(parent.data[i-1])
             parent.data.remove(parent.data[i-2])
-            self.stack.append(parent)
             self.__leafNodeInsert(node.pre, node.data[0], node.rids[node.data[0]])
-            self.search(node.data[0])
             if len(parent.data) == 3:
+                self.search(node.data[0])
                 self.stack.pop() #removing leaf node
                 self.stack.pop() #removing current node
                 self.__indexDelete(parent)
@@ -215,14 +306,81 @@ class BTree:
         rid = self.search(value)
 
         self.__leafDelete(self.stack.pop(), value)
+    
+    def loadFromDict(self, d, keyType):
+        global leaves 
+        leaves = []
+        self.root.fromDict(d, keyType)
+        for i in range(len(leaves) -1):
+            leaves[i].next = leaves[i + 1]
+            leaves[i + 1].pre = leaves[i]
+
+        leaves[-1].pre = leaves[-2]
+    def __listSubtree(self , node):
+        max = node
+        while not max.isLeaf:
+            max = max.data[-1]
+
+        min = node
+        while not min.isLeaf:
+            min = min.data[0]
+
+        rids = {}
+        node = min
+        while node != max.next:
+            for i in node.data:
+                rids[i] = node.rids[i]
+            node = node.next
+
+    
+        return rids
+    def list(self):
+        node = self.root
+        while not node.isLeaf:
+            node = node.data[0]
+
+        rids = {}
+        while isinstance(node, Node):
+            for i in node.data:
+                rids[i] = node.rids[i]
+            node = node.next
+    
+        return rids
+
+    def filter(self,min = None, max = None):
+        if min and max : 
+            raise Exception("Make your mind about filter")
+        result = {}
+
+        if min:
+            self.search(min)
+            leaf = self.stack.pop()
+            for i in leaf.rids.keys(): 
+                if i > min:
+                    result[i] = leaf.rids[i]
+            
+            while leaf:
+                result.update(leaf.rids)
+                leaf = leaf.next
+
+            
+        elif max:
+            self.search(max)
+            leaf = self.stack.pop()
+            for i in leaf.rids.keys(): 
+                if i < max:
+                    result[i] = leaf.rids[i]
+            
+            while leaf:
+                result.update(leaf.rids)
+                leaf = leaf.pre
+        else:
+            raise Exception("No condition given")
+        
+        return result
+
+
+        
 
 
 
-
-t = BTree()
-for i in range(6, 23):
-    t.insert(i,i)
-t.delete(21)
-t.delete(22)
-
-print("lol")
