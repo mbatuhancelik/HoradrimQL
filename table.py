@@ -90,6 +90,8 @@ class table:
             page.delete(searchResult[2])
             self.tree.delete(key)
             updatePage(page, searchResult[0], searchResult[1])
+        else:
+            raise Exception("Deleting a nonexisting record")
     def list(self):
         rids = self.tree.list()
         result = []
