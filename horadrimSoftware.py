@@ -9,7 +9,7 @@ args = sys.argv[1:]
 # outputFile = args[1]
 os.chdir("tempfiles")
 
-inputFile = "../input2.txt"
+inputFile = "../input.txt"
 outputFile = "../output.txt"
 
 inputFile = open(inputFile, "r")
@@ -228,6 +228,6 @@ def parseInput(line):
     
 
 for line in lines:
-    parseInput(line)
+    parseInput(line.strip())
 
 del catalog
