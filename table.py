@@ -5,7 +5,7 @@ from page import Page
 from buffermanager import getPage, updatePage
 import os.path
 import os
-class table:
+class Table:
     def __init__(self, tableName, primaryOrder, fieldNames,fieldTypes):
         
         self.deleted = False
@@ -27,15 +27,15 @@ class table:
             self.fileNames = d['fileNames'] 
             self.lastFile  = int(d['lastFile'])
             self.primaryOrder = int(d['primaryOrder'])
-            self.primaryType = fieldTypes[primaryOrder]
+            self.primaryType = self.fieldTypes[self.primaryOrder]
             self.tree.loadFromDict(d['tree'], self.primaryType)
             return
         self.fieldTypes = fieldTypes
         self.fileNames = {}
         self.lastFile = 0
         self.fileNames[0] = (tableName + "_"+ str(self.lastFile) )
-        self.primaryType = fieldTypes[primaryOrder]
-        self.primaryOrder = primaryOrder
+        self.primaryOrder = primaryOrder - 1 
+        self.primaryType = fieldTypes[self.primaryOrder]
         if not os.path.exists(self.fileNames[0]):
             p = Page(tableName, "record", fieldTypes)
             f = File(self.fileNames[0])
@@ -82,6 +82,8 @@ class table:
             page = getPage(searchResult[0] , searchResult[1])
             page.update(searchResult[2], data)
             updatePage(page, searchResult[0], searchResult[1])
+        else:
+            raise Exception("updating nonexisting record")
     
     def delete(self, key):
         searchResult = self.tree.search(key)
@@ -92,6 +94,13 @@ class table:
             updatePage(page, searchResult[0], searchResult[1])
         else:
             raise Exception("Deleting a nonexisting record")
+    def search(self, key):
+        searchResult = self.tree.search(key)
+        if searchResult:
+            page = getPage(searchResult[0] , searchResult[1])
+            return page.records[searchResult[2]].data
+        else:
+            raise Exception("Key does not exists")
     def list(self):
         rids = self.tree.list()
         result = []
@@ -110,7 +119,7 @@ class table:
         keys = list(rids.keys())
         keys.sort()
         for i in keys:
-            result.append(getPage(rids[i][0],rids[i][1]).records[rids[i][2]])
+            result.append((getPage(rids[i][0],rids[i][1]).records[rids[i][2]]).data)
 
 
         return result
@@ -139,9 +148,3 @@ class table:
         json.dump(d, outfile, indent=4)
         outfile.close()
 
-
-t = table("table2" , 1 , ["asfasdsa"] * 12, [int] * 12)
-t.deleteTable()
-
-
-del t

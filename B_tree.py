@@ -1,10 +1,4 @@
-
-
-
 import json
-from statistics import median_grouped
-
-from numpy import isin
 
 
 D = 4
@@ -311,6 +305,9 @@ class BTree:
         global leaves 
         leaves = []
         self.root.fromDict(d, keyType)
+
+        if len(leaves) == 0:
+            return
         for i in range(len(leaves) -1):
             leaves[i].next = leaves[i + 1]
             leaves[i + 1].pre = leaves[i]
@@ -358,7 +355,7 @@ class BTree:
             for i in leaf.rids.keys(): 
                 if i > min:
                     result[i] = leaf.rids[i]
-            
+            leaf = leaf.next
             while leaf:
                 result.update(leaf.rids)
                 leaf = leaf.next
@@ -370,7 +367,7 @@ class BTree:
             for i in leaf.rids.keys(): 
                 if i < max:
                     result[i] = leaf.rids[i]
-            
+            leaf = leaf.pre
             while leaf:
                 result.update(leaf.rids)
                 leaf = leaf.pre
