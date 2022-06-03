@@ -9,15 +9,16 @@ class Page:
     '''
     def __init__(self,tableName,type, fieldTypes):
         #TODO allocatte number of records in a page dynamically
-        self.records = {int: Record}
+        self.records = {int: Record}    # <position in page, record>
         self.type = type
         self.tableName = tableName
         self.numFields = len(fieldTypes)
         self.fieldTypes = fieldTypes
         self.filled = [False] * 1024
-        self.recordHeader = {"table": self.tableName}
+        self.recordHeader = {"table": self.tableName}   # Record header only includes table name for now?
     
     def availableId(self):
+        """Looks for an available spot in page."""
         if(len(self.records) == 1024):
             raise Exception("Page is full")
         
@@ -27,6 +28,8 @@ class Page:
 
 
     def validateData(self, data):
+        """Checking if given data's field length and types mathcing the expected."""
+
         if(len(data) != len(self.fieldTypes)):
             raise Exception(f"Field mismatch during page insert: Got {len(data)} while expecting {len(self.fieldTypes)}")
         for i in range(len(self.fieldTypes)):
@@ -34,7 +37,7 @@ class Page:
                 raise Exception(f"Field mismatch during page insert: Got {type(data[i])} while expecting {self.fieldTypes[i]} at {i}")
     
     def insert(self, data):
-
+        """ Insert the given record to page."""
         self.validateData(data)
 
         id = self.availableId()
@@ -44,11 +47,15 @@ class Page:
         self.filled[id] = True
 
     def update(self, id, data):
+        """ Update existing record."""
+
         self.validateData(data)
 
         self.records[id] = Record(self.type ,self.recordHeader,data)
 
     def delete(self, id):
+        """ Delete the record with given ID."""
+
         if id not in self.records.keys():
             raise Exception(f"Nonexisting record is deleted with id: {id}")
 
@@ -56,18 +63,21 @@ class Page:
         self.filled[id] = False 
     def length(self):
         return len(self.createHeader()) + (len(self.filled) * len(self.getIdString(0) + "#" + self.mockRecord() + "\n")) 
+
     def isFull(self):
+        """ Check if page has any available ID"""
         try:
             self.availableId()
             return False
         except:
             return True
     def getIdString(self, id):
+        """ Padding given ID with 0's at the beginning, so that all ID's produce equal length strings"""
+
         id = str(id)
         maxId = str(len(self.filled) -1)
         while not len(id) == len(maxId):
             id = "0" + id
-        
         return id
     def mockRecord(self) :
         newStr = ""

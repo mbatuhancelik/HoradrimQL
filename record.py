@@ -1,11 +1,14 @@
 from utils import padding
 class Record: 
     def __init__(self, type, header: dict, data: list  ):
-        self.type = type
+
+        self.type = type    # What are our record types 
         self.header = header
         self.data = data 
     
+    
     def stringify (self):
+        """Turn this record object to string."""
         newStr = ""
         newStr += padding(self.type)
         newStr += "@"
@@ -14,11 +17,13 @@ class Record:
         newStr = newStr[:-1] + "@"
         for d in self.data:
             newStr += padding(str(d)) + "|"
-        newStr = newStr[:-1]
-        self.size  = len(newStr)
+        newStr = newStr[:-1]#??
+        self.size  = len(newStr)# ??
         return newStr
     
     def loadFromString(self, s, types):
+        """Fill a Record object with given string and types list(provides types of datas in record)"""
+
         data = s.split("@")
         self.type = data[0]
 
