@@ -5,12 +5,12 @@ import os
 
 args = sys.argv[1:]
 
-# inputFile = args[0]
-# outputFile = args[1]
+inputFile = args[0]
+outputFile = args[1]
 os.chdir("tempfiles")
 
-inputFile = "../input.txt"
-outputFile = "../output.txt"
+inputFile = "../" + inputFile
+outputFile = "../"+ outputFile
 
 inputFile = open(inputFile, "r")
 outputFile = open(outputFile, "w")
