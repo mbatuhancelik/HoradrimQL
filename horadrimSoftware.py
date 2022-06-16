@@ -21,6 +21,8 @@ catalog = Table("_catalog", 1,["tableName"], [str])
 
 def parseInput(line):
     command = line.split()
+    if len(command) == 0: 
+        return
     command_data = command[2:]
     if command[1] == "type":
         type_comm = command[0]
